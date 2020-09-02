@@ -1,7 +1,11 @@
 from room import Room
 from player import Player
+from item import Item
 
 # Declare all the rooms
+item = {
+	'key': Item("Key", "A strange key that seems like it could be useful")
+}
 
 room = {
 	'outside':  Room("Outside Cave Entrance",
@@ -34,6 +38,8 @@ room['narrow'].w_to = room['foyer']
 room['narrow'].n_to = room['treasure']
 room['treasure'].s_to = room['narrow']
 
+room['foyer'].add_item(item['key'])
+
 #
 # Main
 #
@@ -57,33 +63,68 @@ print(f'\nWelcome, {player.name}')
 while True:
 	print()
 	print(player.current_room.name)
-	print(player.current_room.description)
-	choice = input('Which direction would you like to go? ')
+	print(player.current_room.description + '\n')
+	# print(f"\ninv: {player.inventory}, room items: {player.current_room.items}")
 
-	if choice == 'q':
-		print('Exiting game...')
-		break
-	elif choice == 'n':
-		if player.current_room.n_to:
-			player.current_room = player.current_room.n_to
-		else:
-			print()
-			print("There is nothing for you that way, try a new direction...")
-	elif choice == 's':
-		if player.current_room.s_to:
-			player.current_room = player.current_room.s_to
-		else:
-			print()
-			print("There is nothing for you that way, try a new direction...")
-	elif choice == 'e':
-		if player.current_room.e_to:
-			player.current_room = player.current_room.e_to
-		else:
-			print()
-			print("There is nothing for you that way, try a new direction...")
-	elif choice == 'w':
-		if player.current_room.w_to:
-			player.current_room = player.current_room.w_to
-		else:
-			print()
-			print("There is nothing for you that way, try a new direction...")
+	if len(player.current_room.items) > 0:
+		print('You spot something in the area')
+		for item in player.current_room.items:
+			print(f"{item.name}: {item.description}")
+		print()
+
+	choice = input('What is your action? ')
+
+	if len(choice.split(' ')) == 1:
+		if choice == 'q':
+			print('Exiting game...')
+			break
+		elif choice == 'i' or choice == 'inventory':
+			if len(player.inventory) > 0:
+				print('Your inventory:')
+				for item in player.inventory:
+					print(f"{item.name}: {item.description}")
+			else:
+				print("Your inventory is empty")
+		elif choice == 'n':
+			if player.current_room.n_to:
+				player.current_room = player.current_room.n_to
+			else:
+				print()
+				print("There is nothing for you that way, try a new direction...")
+		elif choice == 's':
+			if player.current_room.s_to:
+				player.current_room = player.current_room.s_to
+			else:
+				print()
+				print("There is nothing for you that way, try a new direction...")
+		elif choice == 'e':
+			if player.current_room.e_to:
+				player.current_room = player.current_room.e_to
+			else:
+				print()
+				print("There is nothing for you that way, try a new direction...")
+		elif choice == 'w':
+			if player.current_room.w_to:
+				player.current_room = player.current_room.w_to
+			else:
+				print()
+				print("There is nothing for you that way, try a new direction...")
+	elif len(choice.split(' ')) == 2:
+		command = choice.split(' ')
+		if command[0] == 'take' or command[0] == 'get':
+			room_has_item = [item for item in player.current_room.items if command[1].lower() == item.name.lower()]
+			if len(room_has_item) > 0:
+				player.current_room.remove_item(room_has_item[0].name)
+				player.add_to_inventory(room_has_item[0])
+			else:
+				print(f"\nThere is no {command[1]} in this room")
+		elif command[0] == 'drop':
+			player_has_item = [item for item in player.inventory if command[1].lower() == item.name.lower()]
+			if len(player_has_item) > 0:
+				player.remove_from_inventory(player_has_item[0].name)
+				player.current_room.add_item(player_has_item[0])
+			else:
+				print(f"\nThere is no {command[1]} in your inventory")
+	else:
+		print('Unable to do that')
+	print("\n---------------------------------------------------------------------------")
